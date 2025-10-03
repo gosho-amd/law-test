@@ -12,18 +12,46 @@ export default function App() {
     fetch('/all_tests.json')
       .then(res => res.json())
       .then(data => {
+        console.log('Loaded tests:', data.length) // Debug log
         setTests(data)
+      })
+      .catch(error => {
+        console.error('Error loading tests:', error)
       })
   }, [])
 
-  const years = Array.from(
+  // Calculate years only when tests are available
+  const years = tests.length > 0 ? Array.from(
     new Set(
       tests.map(t => {
+        console.log('Processing title:', t.testTitle) // Debug log
         const match = t.testTitle.match(/\((пролет|есен) (\d{4})г\.\)/i)
+        console.log('Match result:', match) // Debug log
         return match ? match[2] : null
       }).filter(Boolean)
     )
-  ).sort()
+  ).sort() : []
+
+  console.log('Available years:', years) // Debug log
+
+  useEffect(() => {
+    if (year) {
+      const seasons = Array.from(
+        new Set(
+          tests
+            .filter(t => t.testTitle.includes(year))
+            .map(t => {
+              const match = t.testTitle.match(/\((пролет|есен)/i)
+              return match ? match[1].toLowerCase() : null
+            })
+            .filter(Boolean)
+        )
+      )
+      setAvailableSeasons(seasons)
+    } else {
+      setAvailableSeasons([])
+    }
+  }, [year, tests])
 
   useEffect(() => {
     if (year) {
